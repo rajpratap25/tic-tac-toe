@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe - Space War Edition</title>
+    <style>
+        @keyframes stars {
+            0% { background-position: 0 0; }
+            100% { background-position: 1000px 1000px; }
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            text-align: center;
+            background: url('https://img.freepik.com/premium-vector/tic-tac-toe-game-linear-outline-icon-colour-neon-style-brick-wall-background-light-icon_549897-1770.jpg?w=2000') repeat;
+            animation: stars 50s linear infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            width: 60%;
+            max-width: 600px;
+        }
+        .leaderboard {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            width: 200px;
+            display: none;
+            text-align: left;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            font-size: 2.5em;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            border: 2px solid #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            transition: 0.3s;
+        }
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        input {
+            font-size: 1.2em;
+            padding: 10px;
+            width: 250px;
+            border: 2px solid #0ff;
+            border-radius: 10px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .buttons button {
+            font-size: 1.2em;
+            padding: 12px 20px;
+            border-radius: 5px;
+            background-color: #0ff;
+            color: black;
+            cursor: pointer;
+            border: none;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        .buttons button:hover {
+            background-color: #0cc;
+        }
+        #status {
+            font-size: 1.5em;
+            margin: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="leaderboard" id="leaderboard">
+        <h2>Leaderboard</h2>
+        <p><span id="playerXName">Player 1</span> Wins: <span id="playerXWins">0</span></p>
+        <p><span id="playerOName">Player 2</span> Wins: <span id="playerOWins">0</span></p>
+        <div class="buttons">
+            <button onclick="resetGame()">🔄 Restart</button>
+            <button onclick="resetLeaderboard()">🗑 Reset Leaderboard</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>🚀 Tic Tac Toe - Space War Edition 🌌</h1>
+        <input type="text" id="player1" placeholder="Enter Player 1 Name">
+        <input type="text" id="player2" placeholder="Enter Player 2 Name">
+        <br>
+        <button onclick="startGame()">Start Game</button>
+        <div id="gameArea" style="display: none;">
+            <h2 id="status">Player X's turn</h2>
+            <div class="board" id="board"></div>
+        </div>
+    </div>
+
+    <script>
+        let player1Name = "Player 1";
+        let player2Name = "Player 2";
+        let currentPlayer = "X";
+        let gameBoard = ["", "", "", "", "", "", "", "", ""];
+        let playerXWins = 0;
+        let playerOWins = 0;
+
+        function startGame() {
+            player1Name = document.getElementById("player1").value || "Player 1";
+            player2Name = document.getElementById("player2").value || "Player 2";
+            document.getElementById("playerXName").innerText = player1Name;
+            document.getElementById("playerOName").innerText = player2Name;
+            document.getElementById("status").innerText = `${player1Name}'s turn`;
+            document.getElementById("gameArea").style.display = "block";
+            document.getElementById("leaderboard").style.display = "block";
+            createBoard();
+        }
+
+        function createBoard() {
+            const board = document.getElementById("board");
+            board.innerHTML = "";
+            gameBoard.forEach((value, index) => {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.dataset.index = index;
+                cell.innerText = value;
+                cell.addEventListener("click", handleMove);
+                board.appendChild(cell);
+            });
+        }
+
+        function handleMove(event) {
+            const index = event.target.dataset.index;
+            if (gameBoard[index] === "") {
+                gameBoard[index] = currentPlayer;
+                event.target.innerText = currentPlayer;
+                if (checkWinner()) {
+                    document.getElementById("status").innerText = `${currentPlayer === "X" ? player1Name : player2Name} Wins! 🎉`;
+                    updateLeaderboard(currentPlayer);
+                    document.querySelectorAll(".cell").forEach(cell => cell.removeEventListener("click", handleMove));
+                } else if (!gameBoard.includes("")) {
+                    document.getElementById("status").innerText = "It's a Draw!";
+                } else {
+                    currentPlayer = currentPlayer === "X" ? "O" : "X";
+                    document.getElementById("status").innerText = `${currentPlayer === "X" ? player1Name : player2Name}'s turn`;
+                }
+            }
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            return winPatterns.some(pattern => {
+                const [a, b, c] = pattern;
+                return gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c];
+            });
+        }
+
+        function updateLeaderboard(winner) {
+            if (winner === "X") {
+                playerXWins++;
+                document.getElementById("playerXWins").innerText = playerXWins;
+            } else {
+                playerOWins++;
+                document.getElementById("playerOWins").innerText = playerOWins;
+            }
+        }
+
+        function resetGame() {
+            gameBoard = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            document.getElementById("status").innerText = `${player1Name}'s turn`;
+            createBoard();
+        }
+
+        function resetLeaderboard() {
+            playerXWins = 0;
+            playerOWins = 0;
+            document.getElementById("playerXWins").innerText = "0";
+            document.getElementById("playerOWins").innerText = "0";
+        }
+    </script>
+</body>
+</html>
